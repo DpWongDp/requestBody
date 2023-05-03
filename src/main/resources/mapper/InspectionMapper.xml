@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.requestbody.mapper.InspectionMapper">
+    <!--    public Employee getEmpById(Integer id);
+     public void insertEmp(Employee employee);-->
+    <!--resultType是返回值类型-->
+    <resultMap id="returnListMap" type="com.dp.requestbody.model.Inspection">
+        <id property="id" column="id"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="line" column="line"/>
+        <result property="location" column="location"/>
+        <result property="person" column="person"/>
+        <result property="inspectionTime" column="inspection_time"/>
+        <result property="bang" column="bang"/>
+        <result property="inspectionStatus" column="inspection_status"/>
+    </resultMap>
+
+    <select id="findListAll" resultMap="returnListMap">
+        SELECT id,start_time,end_time,line,location,person,inspection_time,bang
+             ,CASE inspection_status WHEN 0 THEN '未到' ELSE '准时' END AS inspection_status
+               FROM  inspection;
+    </select>
+
+    <select id="findList" parameterType="com.dp.requestbody.model.PageModel" resultMap="returnListMap">
+        SELECT id,start_time,end_time,line,location,person,inspection_time,bang
+             ,CASE inspection_status WHEN 0 THEN '未到' ELSE '准时' END AS inspection_status
+        FROM  inspection
+        <where>
+            <if test="inspection != null">
+                <if test="inspection.inspectionStatus != null">
+                   inspection_status = #{inspection.inspectionStatus}
+                </if>
+                <if test="inspection.line != null">
+                   AND line = #{inspection.line}
+                </if>
+            </if>
+        </where>
+        <if test="pageSize != 0 and pageNum != 0">
+            LIMIT #{pageSize} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="statisticForPastMonth" resultType="HashMap">
+        SELECT
+        line,person,count( 1 ) AS nums
+        FROM
+        inspection
+        WHERE
+        DATE_FORMAT( NOW(), '%Y-%m-%d' ) &lt;= DATE_FORMAT( DATE_ADD( start_time, INTERVAL 30 DAY ), '%Y-%m-%d' )
+        GROUP BY
+        line,
+        person
+        ORDER BY line asc
+    </select>
+
+    <select id="statisticForPastSevenDay" resultType="HashMap">
+        SELECT
+            DATE_FORMAT( inspection_time, '%Y-%m-%d' ) AS inspection_time,
+            count( 1 )  as nums
+        FROM
+            inspection
+        WHERE DATE_FORMAT(DATE_ADD(inspection_time,INTERVAL 7 DAY),'%Y-%m-%d') >= DATE_FORMAT(NOW(),'%Y-%m-%d')
+        GROUP BY
+            DATE_FORMAT( inspection_time, '%Y-%m-%d' );
+    </select>
+
+    <select id="statisticStatusForPastMonth" resultType="HashMap">
+        SELECT
+            count(IF(inspection_status = 1,1,null))  as onTime,
+            count(IF(inspection_status = 0,1,null))  as notOnTime
+        FROM
+            inspection
+        WHERE DATE_FORMAT(DATE_ADD(inspection_time,INTERVAL 30 DAY),'%Y-%m-%d') >= DATE_FORMAT(NOW(),'%Y-%m-%d')
+    </select>
+
+    <select id="countList" parameterType="com.dp.requestbody.model.PageModel" resultType="Integer">
+        SELECT count(1) as nums
+        FROM  inspection
+        WHERE 1 = 1
+        <if test="inspection != null">
+            <if test="inspection.inspectionStatus != null">
+                AND inspection_time = #{inspectionStatus}
+            </if>
+            <if test="line != null">
+                AND line = line
+            </if>
+        </if>
+    </select>
+
+    <insert id="insertInspection" parameterType="com.dp.requestbody.model.Inspection">
+        INSERT INTO inspection
+        (start_time, end_time, line, location, person, inspection_time, bang, inspection_status)
+        VALUES
+            (#{startTime}, #{endTime}, #{line}, #{location}, #{person}, #{inspectionTime}, #{bang}, #{inspectionStatus})
+    </insert>
+</mapper>

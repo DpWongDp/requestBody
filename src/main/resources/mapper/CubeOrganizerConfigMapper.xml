@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dp.requestbody.mapper.CubeOrganizerConfigMapper">
+    <!--    public Employee getEmpById(Integer id);
+     public void insertEmp(Employee employee);-->
+    <!--resultType是返回值类型-->
+
+    <select id="getOrganizerConfigByFieldKey" resultType="com.dp.requestbody.model.CubeOrganizerConfig">
+        SELECT * FROM cube_organizer_config WHERE FIELD_KEY = 'ws_flush_start_time';
+    </select>
+</mapper>
